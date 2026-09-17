@@ -1,0 +1,6 @@
+.build/
+StayAwake.app/
+StayAwake.zip
+StayAwake.dmg
+dmg_staging/
+.DS_Store
