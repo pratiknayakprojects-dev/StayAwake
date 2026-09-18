@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StayAwake — keep your Mac awake</title>
+<meta name="description" content="A free, notarized menu bar app for macOS that keeps your Mac awake — even with the lid closed.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #FAF5EC;
+    --surface: #FFFDF8;
+    --ink: #2A2016;
+    --muted: #8A7862;
+    --accent: #96562A;
+    --accent-ink: #FFFDF8;
+    --accent-soft: #E8D2B0;
+    --border: #E7DCC7;
+    --shadow: rgba(42, 32, 22, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1C1611;
+      --surface: #241C15;
+      --ink: #F2E9DC;
+      --muted: #B3A28B;
+      --accent: #E0A65C;
+      --accent-ink: #2A2016;
+      --accent-soft: #3B2E1F;
+      --border: #3A2E20;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 0 20px;
+    padding-block: 56px;
+  }
+  .wrap {
+    max-width: 620px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cup {
+    width: 34px;
+    height: 34px;
+    flex: none;
+  }
+  .brand-name {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .hero h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 5.5vw, 2.75rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+  }
+  .hero p {
+    font-size: 1.05rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 46ch;
+  }
+
+  .download-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 8px 28px var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .cup-demo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .cup-demo svg { width: 44px; height: 44px; flex: none; }
+  .cup-demo-text { display: flex; flex-direction: column; gap: 2px; }
+  .cup-demo-text strong { font-size: 0.95rem; }
+  .cup-demo-text span { font-size: 0.85rem; color: var(--muted); }
+
+  .btn-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 16px 24px;
+    border-radius: 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-download:hover { transform: translateY(-1px); box-shadow: 0 6px 18px var(--shadow); }
+  .btn-download:active { transform: translateY(0); }
+  .btn-download svg { width: 20px; height: 20px; }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .verified {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .verified svg { width: 16px; height: 16px; flex: none; color: var(--accent); }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .steps h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    padding-block: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .step:first-of-type { border-top: none; }
+  .step-num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    padding-top: 2px;
+  }
+  .step-body strong { display: block; font-size: 0.95rem; margin-bottom: 2px; }
+  .step-body span { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--border); }
+  footer a:hover { border-color: var(--accent); }
+
+  @media (max-width: 480px) {
+    .meta-row { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <svg class="cup" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="8" width="13" height="12" rx="3" stroke="var(--ink)" stroke-width="1.6"/>
+      <path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M7 5c0-1 1-1 1-2M11 5c0-1 1-1 1-2" stroke="var(--ink)" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    <span class="brand-name">StayAwake</span>
+  </div>
+
+  <div class="hero">
+    <h1>Keep your Mac awake. Even with the lid closed.</h1>
+    <p>A free menu bar app for macOS. Two clicks to start, two to stop. No account, no ads, nothing to configure.</p>
+  </div>
+
+  <div class="download-card">
+    <div class="cup-demo">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="8" width="13" height="12" rx="3" stroke="var(--accent)" stroke-width="1.6"/>
+        <rect x="5.5" y="13.5" width="10" height="5.5" rx="1.5" fill="var(--accent)" opacity="0.85"/>
+        <path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <div class="cup-demo-text">
+        <strong>This icon lives in your menu bar</strong>
+        <span>It fills up while StayAwake is on, drains when a timer runs out</span>
+      </div>
+    </div>
+
+    <a class="btn-download" href="https://github.com/pratiknayakprojects-dev/StayAwake/releases/latest/download/StayAwake.dmg">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3v12m0 0-4-4m4 4 4-4M5 19h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Download for Mac
+    </a>
+
+    <div class="meta-row">
+      <span>v1.0.0</span>
+      <span>66 KB</span>
+      <span>macOS 13 Ventura or later</span>
+    </div>
+
+    <div class="verified">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2l7 3v6c0 5-3.2 8.5-7 11-3.8-2.5-7-6-7-11V5l7-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Signed and notarized by Apple — opens with no security warnings
+    </div>
+  </div>
+
+  <div class="steps">
+    <h2>Setup</h2>
+    <div class="step">
+      <span class="step-num">01</span>
+      <div class="step-body">
+        <strong>Open the download, drag to Applications</strong>
+        <span>Same as installing any other Mac app.</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <div class="step-body">
+        <strong>Launch StayAwake, find the cup icon</strong>
+        <span>It sits quietly in your menu bar — no dock icon, no window.</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <div class="step-body">
+        <strong>Click it, choose Keep Awake</strong>
+        <span>Want it to survive a closed lid too? Pick that option instead — it asks you to approve once, then never again.</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Made by Pratik Nayak · MIT licensed</span>
+    <a href="https://github.com/pratiknayakprojects-dev/StayAwake">Source on GitHub</a>
+  </footer>
+
+</div>
+</body>
+</html>
