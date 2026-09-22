@@ -142,6 +142,20 @@
   }
   .verified svg { width: 16px; height: 16px; flex: none; color: var(--accent); }
 
+  .usp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .usp-list div {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+  .usp-list svg { width: 18px; height: 18px; flex: none; color: var(--accent); margin-top: 2px; }
+
   .feature-card {
     background: var(--accent-soft);
     border-radius: 18px;
@@ -223,11 +237,22 @@
   </div>
 
   <div class="hero">
-    <h1>Keep your Mac awake. Even with the lid closed.</h1>
-    <p>A free menu bar app for macOS. Two clicks to start, two to stop. No account, no ads, nothing to configure.</p>
+    <h1>Awake in one click. Asleep on its own.</h1>
+    <p>Skip System Settings and the pmset commands. One click keeps your Mac running — a built-in timer switches it back off, so it's never silently draining your battery in a bag.</p>
   </div>
 
   <div class="download-card">
+    <div class="usp-list">
+      <div>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span>Faster than System Settings — one click from the menu bar, no digging through Battery preferences.</span>
+      </div>
+      <div>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Set a timer so you don't have to remember to turn it off — it stops itself before it wastes your battery.</span>
+      </div>
+    </div>
+
     <div class="cup-demo">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="4" y="8" width="13" height="12" rx="3" stroke="var(--accent)" stroke-width="1.6"/>
@@ -235,8 +260,8 @@
         <path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17" stroke="var(--accent)" stroke-width="1.6" stroke-linecap="round"/>
       </svg>
       <div class="cup-demo-text">
-        <strong>This icon lives in your menu bar</strong>
-        <span>It fills up while StayAwake is on, drains when a timer runs out</span>
+        <strong>The menu bar icon shows you at a glance</strong>
+        <span>Fills up while StayAwake is on, drains as your timer counts down</span>
       </div>
     </div>
 
