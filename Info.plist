@@ -9,9 +9,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.pratiknayak.stayawake</string>
     <key>CFBundleVersion</key>
-    <string>1.0</string>
+    <string>1.1</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.1</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
@@ -22,5 +22,7 @@
     <true/>
     <key>NSHumanReadableCopyright</key>
     <string>StayAwake</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>StayAwake needs to control System Events to trigger your iPhone's hotspot, and Messages to alert your phone if the connection fails.</string>
 </dict>
 </plist>

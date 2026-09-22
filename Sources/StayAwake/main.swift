@@ -138,6 +138,7 @@ final class PowerManager {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private let power = PowerManager()
+    private let workstationCarrier = WorkstationCarrier()
     private var timer: Timer?
     private var secondsRemaining: Int = 0
     private var selectedDuration: Duration = .untilOff
@@ -196,6 +197,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let statusEntry = NSMenuItem(title: statusText, action: nil, keyEquivalent: "")
         statusEntry.isEnabled = false
         menu.addItem(statusEntry)
+        menu.addItem(.separator())
+
+        let carryItem = NSMenuItem(title: "Carry My Workstation", action: #selector(carryMyWorkstation), keyEquivalent: "")
+        carryItem.target = self
+        menu.addItem(carryItem)
+
         menu.addItem(.separator())
 
         // Three mutually exclusive states — exactly one is ever checked.
@@ -275,6 +282,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func chooseOff() {
         stop()
+    }
+
+    /// Preset: lid-closed protection for exactly one hour, plus an attempt to
+    /// rejoin the iPhone's hotspot so the Mac stays networked in a bag too.
+    @objc private func carryMyWorkstation() {
+        power.startAwake(lidClosed: true)
+        selectedDuration = .oneHour
+        startCountdownIfNeeded(reset: true)
+        updateButton()
+        buildMenu()
+        workstationCarrier.start()
     }
 
     @objc private func chooseAwake() {
