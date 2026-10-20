@@ -139,6 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private let power = PowerManager()
     private let workstationCarrier = WorkstationCarrier()
+    private let license = License.shared
     private var timer: Timer?
     private var secondsRemaining: Int = 0
     private var selectedDuration: Duration = .untilOff
@@ -179,6 +180,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         power.syncFromSystem()
+        _ = license.state // first launch starts the trial clock
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         updateButton()
         buildMenu()
@@ -197,9 +199,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let statusEntry = NSMenuItem(title: statusText, action: nil, keyEquivalent: "")
         statusEntry.isEnabled = false
         menu.addItem(statusEntry)
+        switch license.state {
+        case .licensed:
+            break
+        case .trial(let daysLeft):
+            let trialEntry = NSMenuItem(title: "Free trial: \(daysLeft) day\(daysLeft == 1 ? "" : "s") left", action: nil, keyEquivalent: "")
+            trialEntry.isEnabled = false
+            menu.addItem(trialEntry)
+        case .expired:
+            let trialEntry = NSMenuItem(title: "Trial ended. Buy a license to keep using StayAwake.", action: nil, keyEquivalent: "")
+            trialEntry.isEnabled = false
+            menu.addItem(trialEntry)
+        }
         menu.addItem(.separator())
 
-        let carryItem = NSMenuItem(title: "Carry My Workstation", action: #selector(carryMyWorkstation), keyEquivalent: "")
+        let carryItem = NSMenuItem(title: "Carry My Workstation (Beta)", action: #selector(carryMyWorkstation), keyEquivalent: "")
         carryItem.target = self
         menu.addItem(carryItem)
 
@@ -237,6 +251,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(autoStop)
 
         menu.addItem(.separator())
+        let loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLoginItem), keyEquivalent: "")
+        loginItem.target = self
+        loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        menu.addItem(loginItem)
+        menu.addItem(.separator())
+        if license.state != .licensed {
+            let buy = NSMenuItem(title: "Buy StayAwake (\(License.priceLabel))…", action: #selector(buyLicense), keyEquivalent: "")
+            buy.target = self
+            menu.addItem(buy)
+            let enter = NSMenuItem(title: "Enter License Key…", action: #selector(enterLicenseKey), keyEquivalent: "")
+            enter.target = self
+            menu.addItem(enter)
+            menu.addItem(.separator())
+        }
         let quit = NSMenuItem(title: "Quit StayAwake", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
@@ -287,6 +315,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Preset: lid-closed protection for exactly one hour, plus an attempt to
     /// rejoin the iPhone's hotspot so the Mac stays networked in a bag too.
     @objc private func carryMyWorkstation() {
+        guard ensureAllowed() else { return }
         power.startAwake(lidClosed: true)
         selectedDuration = .oneHour
         startCountdownIfNeeded(reset: true)
@@ -296,6 +325,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func chooseAwake() {
+        guard ensureAllowed() else { return }
         power.startAwake(lidClosed: false)
         startCountdownIfNeeded(reset: true)
         updateButton()
@@ -303,6 +333,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func chooseAwakeLidClosed() {
+        guard ensureAllowed() else { return }
         power.startAwake(lidClosed: true)
         startCountdownIfNeeded(reset: true)
         updateButton()
@@ -350,6 +381,82 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         stop()
         NSApp.terminate(nil)
     }
+
+    @objc private func toggleLoginItem() {
+        let service = SMAppService.mainApp
+        do {
+            if service.status == .enabled {
+                try service.unregister()
+            } else {
+                try service.register()
+            }
+        } catch {
+            showMessage("Couldn't change Open at Login: \(error.localizedDescription)")
+        }
+        if service.status == .requiresApproval {
+            showMessage("Turn on StayAwake in System Settings > General > Login Items to finish.")
+            SMAppService.openSystemSettingsLoginItems()
+        }
+        buildMenu()
+    }
+
+    // MARK: Licensing
+
+    private func ensureAllowed() -> Bool {
+        if license.state != .expired { return true }
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Your \(License.trialDays)-day trial has ended"
+        alert.informativeText = "StayAwake is \(License.priceLabel), one time. Buy a license, or enter the key you already have."
+        alert.addButton(withTitle: "Buy StayAwake")
+        alert.addButton(withTitle: "Enter License Key")
+        alert.addButton(withTitle: "Not Now")
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: buyLicense()
+        case .alertSecondButtonReturn: enterLicenseKey()
+        default: break
+        }
+        return false
+    }
+
+    @objc private func buyLicense() {
+        guard License.isConfigured else { return showMessage("Purchasing isn't set up yet.") }
+        NSWorkspace.shared.open(License.checkoutURL)
+    }
+
+    @objc private func enterLicenseKey() {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = "Enter your license key"
+        alert.informativeText = "It's in the email you got after buying StayAwake."
+        alert.addButton(withTitle: "Activate")
+        alert.addButton(withTitle: "Cancel")
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let key = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { return }
+        license.activate(key: key) { [weak self] result in
+            switch result {
+            case .success: self?.showMessage("Thanks. StayAwake is unlocked.")
+            case .failure(let error): self?.showMessage(error.message)
+            }
+            self?.buildMenu()
+        }
+    }
+
+    private func showMessage(_ text: String) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = text
+        alert.runModal()
+    }
+}
+
+if CommandLine.arguments.contains("--selftest") {
+    License.selfTest()
+    exit(0)
 }
 
 let app = NSApplication.shared
