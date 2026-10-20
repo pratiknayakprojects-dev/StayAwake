@@ -178,7 +178,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
+    /// An accessory app has no main menu, so ⌘V/⌘C/⌘X/⌘A never reach text fields (the license
+    /// dialog). An invisible Edit menu supplies those key equivalents.
+    private func installEditMenu() {
+        let edit = NSMenu(title: "Edit")
+        for (title, action, key) in [("Cut", #selector(NSText.cut(_:)), "x"), ("Copy", #selector(NSText.copy(_:)), "c"),
+                                     ("Paste", #selector(NSText.paste(_:)), "v"), ("Select All", #selector(NSText.selectAll(_:)), "a")] {
+            edit.addItem(withTitle: title, action: action, keyEquivalent: key)
+        }
+        let item = NSMenuItem()
+        item.submenu = edit
+        let main = NSMenu()
+        main.addItem(item)
+        NSApp.mainMenu = main
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        installEditMenu()
         power.syncFromSystem()
         _ = license.state // first launch starts the trial clock
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
