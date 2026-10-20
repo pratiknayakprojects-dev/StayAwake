@@ -193,7 +193,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = main
     }
 
+    /// Two install mistakes: running straight from the disk image, and opening a new copy while an
+    /// old one is still running (duplicate icons, stale version). Returns false if this launch must stop.
+    private func resolveLaunchProblems() -> Bool {
+        if Bundle.main.bundlePath.hasPrefix("/Volumes/") {
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.messageText = "Move StayAwake to Applications first"
+            alert.informativeText = "Drag StayAwake onto the Applications folder in this window, eject the disk image, then open StayAwake from Applications."
+            alert.runModal()
+            NSApp.terminate(nil)
+            return false
+        }
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+            .filter { $0 != NSRunningApplication.current }
+        others.forEach { $0.terminate() }
+        let deadline = Date().addingTimeInterval(3)
+        while others.contains(where: { !$0.isTerminated }) && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return true
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard resolveLaunchProblems() else { return }
         installEditMenu()
         // A session started before the trial ended (e.g. "Until Off") must not outlive it.
         _ = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
@@ -287,6 +310,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(enter)
             menu.addItem(.separator())
         }
+        let version = NSMenuItem(title: "Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")", action: nil, keyEquivalent: "")
+        version.isEnabled = false
+        menu.addItem(version)
         let quit = NSMenuItem(title: "Quit StayAwake", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
