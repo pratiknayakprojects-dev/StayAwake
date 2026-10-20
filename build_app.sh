@@ -13,6 +13,7 @@ mkdir -p "$APP/Contents/Library/LaunchDaemons"
 cp .build/release/StayAwake "$APP/Contents/MacOS/StayAwake"
 cp .build/release/StayAwakeHelper "$APP/Contents/MacOS/StayAwakeHelper"
 cp Info.plist "$APP/Contents/Info.plist"
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cp com.pratiknayak.stayawake.helper.plist "$APP/Contents/Library/LaunchDaemons/com.pratiknayak.stayawake.helper.plist"
 
 echo "Built $APP"

@@ -9,13 +9,15 @@
     <key>CFBundleIdentifier</key>
     <string>com.pratiknayak.stayawake</string>
     <key>CFBundleVersion</key>
-    <string>1.2</string>
+    <string>1.2.1</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.2</string>
+    <string>1.2.1</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
     <string>StayAwake</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>LSUIElement</key>
