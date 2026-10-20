@@ -200,8 +200,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
             let alert = NSAlert()
             alert.messageText = "Move StayAwake to Applications first"
-            alert.informativeText = "Drag StayAwake onto the Applications folder in this window, eject the disk image, then open StayAwake from Applications."
-            alert.runModal()
+            alert.informativeText = "Drag StayAwake onto the Applications folder in the disk image window, eject the disk image, then open StayAwake from Applications."
+            alert.addButton(withTitle: "Show Me")
+            alert.addButton(withTitle: "Quit")
+            if alert.runModal() == .alertFirstButtonReturn {
+                // The volume root holds StayAwake.app and the Applications shortcut side by side.
+                NSWorkspace.shared.open(URL(fileURLWithPath: Bundle.main.bundlePath).deletingLastPathComponent())
+            }
             NSApp.terminate(nil)
             return false
         }
