@@ -195,6 +195,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installEditMenu()
+        // A session started before the trial ended (e.g. "Until Off") must not outlive it.
+        _ = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self, self.power.isAwake, self.license.state == .expired else { return }
+            self.stop()
+            _ = self.ensureAllowed()
+        }
         power.syncFromSystem()
         _ = license.state // first launch starts the trial clock
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
