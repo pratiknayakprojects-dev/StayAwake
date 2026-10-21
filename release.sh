@@ -18,7 +18,11 @@ xcrun stapler staple "$APP"
 
 rm -rf dmg-stage StayAwake.dmg && mkdir dmg-stage
 cp -R "$APP" dmg-stage/ && ln -s /Applications dmg-stage/Applications
-hdiutil create -volname StayAwake -srcfolder dmg-stage -ov -format UDZO StayAwake.dmg
+for i in 1 2 3 4 5; do  # hdiutil sometimes reports "Resource busy" right after a build
+  hdiutil create -volname StayAwake -srcfolder dmg-stage -ov -format UDZO StayAwake.dmg && break
+  sleep 3
+done
+[ -f StayAwake.dmg ]
 rm -rf dmg-stage
 codesign --force --timestamp --sign "$IDENTITY" StayAwake.dmg
 xcrun notarytool submit StayAwake.dmg --keychain-profile "$PROFILE" --wait
