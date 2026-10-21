@@ -1,4 +1,5 @@
 import Cocoa
+import CryptoKit
 import IOKit.pwr_mgt
 import ServiceManagement
 import StayAwakeShared
@@ -91,18 +92,36 @@ final class PowerManager {
     /// with no further authorization of any kind.
     @discardableResult
     func registerHelperIfNeeded() -> HelperRegistrationResult {
+        let fingerprint = helperFingerprint
         switch daemonService.status {
         case .enabled:
-            return .ready
+            // A root daemon keeps running the binary it started with, so an app update does not update
+            // it. Re-register only when the helper binary itself changed (no needless re-approvals).
+            guard UserDefaults.standard.string(forKey: Self.helperFingerprintKey) != fingerprint else { return .ready }
+            try? daemonService.unregister()
+            return registerAndRecord(fingerprint)
         case .requiresApproval:
             return .needsApprovalInSystemSettings
         default:
-            do {
-                try daemonService.register()
-                return daemonService.status == .enabled ? .ready : .needsApprovalInSystemSettings
-            } catch {
-                return .failed(error)
-            }
+            return registerAndRecord(fingerprint)
+        }
+    }
+
+    private static let helperFingerprintKey = "helperFingerprint"
+
+    private var helperFingerprint: String {
+        guard let url = Bundle.main.url(forAuxiliaryExecutable: "StayAwakeHelper"),
+              let data = try? Data(contentsOf: url) else { return "" }
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func registerAndRecord(_ fingerprint: String) -> HelperRegistrationResult {
+        do {
+            try daemonService.register()
+            UserDefaults.standard.set(fingerprint, forKey: Self.helperFingerprintKey)
+            return daemonService.status == .enabled ? .ready : .needsApprovalInSystemSettings
+        } catch {
+            return .failed(error)
         }
     }
 
