@@ -158,17 +158,17 @@ caffeinate -t 3600 -i   # same as -i, for one hour</pre>
       <li><code>-s</code> goes further, but Apple's man page says it only applies on AC power. On battery it does nothing.</li>
       <li>None of these override a lid close. They are the right tool for "don't sleep while I'm away from the keyboard", not for "keep running with the lid shut".</li>
     </ul>
-    <p>Apps like Amphetamine and KeepingYouAwake are mostly friendly front ends over the same kind of assertions, so the same limit applies to their basic modes.</p>
+    <p>KeepingYouAwake is a front end for <code>caffeinate</code>, so it has the same limit and only works with the lid open. Amphetamine is a separate app with its own closed-display mode; check its documentation for the requirements.</p>
 
     <h2>Clamshell mode (needs an external display)</h2>
-    <p>Apple supports closing the lid while working, as long as the Mac is on power, an external display is connected, and you have a keyboard or mouse connected. The Mac then runs on the external display with the lid closed. It's reliable and fully supported. If you have that desk setup, you don't need anything else.</p>
+    <p>Apple supports closing the lid while working, as long as the Mac is plugged into power, an external display is connected, and an external keyboard or mouse is connected (connect these before closing the lid; check Apple's current wording for your macOS version). The Mac then runs on the external display with the lid closed. It's reliable and fully supported. If you have that desk setup, you don't need anything else.</p>
     <p>It doesn't help when you're on battery, or have no display, which is exactly when most people hit this problem.</p>
 
     <h2>The command-line way: <code>pmset disablesleep</code></h2>
-    <p>There is a setting that tells macOS not to sleep at all, including on lid close:</p>
+    <p><code>pmset</code> has an undocumented flag, <code>disablesleep</code> (it isn't in the man page, but <code>pmset -g</code> reports it as <code>SleepDisabled</code>), that stops all sleep including lid close:</p>
 <pre>sudo pmset -a disablesleep 1   # on
 sudo pmset -a disablesleep 0   # back to normal</pre>
-    <p>It works, and it needs root. The risks are practical: if you forget to switch it back, the Mac stays awake whenever you close it, including in a bag, where it can get hot and drain the battery. If you go this route, set a reminder, or run something that reverts it for you.</p>
+    <p>It generally works, though behaviour can vary by Mac and macOS version, and it needs root. The risks are practical: if you forget to switch it back, the Mac stays awake whenever you close it, including in a bag, where it can get hot and drain the battery. If you go this route, set a reminder, or run something that reverts it for you.</p>
 
     <h2>Where StayAwake fits</h2>
     <p>StayAwake is a menu bar app that does the above for you. "Keep Awake" uses a normal power assertion. "Keep Awake When Lid Closed" runs <code>pmset disablesleep</code> through a small helper you approve once. The part I care about is the cleanup: a timer (10 minutes to 3 hours) switches it off for you, and if the app quits, crashes or is force-killed, the helper restores normal sleep. I tested a force-kill, a normal quit and a real lid close before release.</p>
