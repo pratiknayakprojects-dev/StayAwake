@@ -40,6 +40,7 @@ trial)
   security add-generic-password -U -s com.pratiknayak.stayawake -a trialStart -w "$(( $(date +%s) - 7*86400 + 120 ))"
   open "$APP"
   echo "In the menu choose 'Keep Awake' and set Auto-Stop After to 'Until Off'. Press Return."; read -r
+  pmset -g assertions | grep -q "StayAwake: user requested" || fail "no session was running (the trial may have expired before you chose Keep Awake); rerun"
   for _ in $(seq 1 40); do
     pmset -g assertions | grep -q "StayAwake: user requested" || { pass "session stopped when trial expired"; exit 0; }
     sleep 5
