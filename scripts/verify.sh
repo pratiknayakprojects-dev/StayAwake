@@ -21,6 +21,12 @@ kill)
   pkill -9 -x StayAwake; sleep 4
   [ "$(sleep_disabled)" = 0 ] && pass "sleep restored after kill -9" || fail "SleepDisabled still 1 after kill -9"
   open "$APP" ;;
+quit)
+  echo "In the StayAwake menu choose 'Keep Awake When Lid Closed', then press Return."; read -r
+  [ "$(sleep_disabled)" = 1 ] || fail "closed-lid mode was not on (SleepDisabled=$(sleep_disabled))"
+  pkill -x StayAwake; sleep 6  # SIGTERM takes the same shutdown path as menu Quit
+  [ "$(sleep_disabled)" = 0 ] && pass "sleep restored after a normal quit" || fail "SleepDisabled still 1 after a normal quit"
+  open "$APP" ;;
 dup)
   open -n "$APP"; sleep 4
   n=$(pgrep -x StayAwake | wc -l | tr -d ' ')
@@ -39,5 +45,5 @@ trial)
     sleep 5
   done
   fail "session still running 200s after the trial expired" ;;
-*) echo "usage: $0 lid | kill | dup | trial"; exit 2 ;;
+*) echo "usage: $0 lid | kill | quit | dup | trial"; exit 2 ;;
 esac
