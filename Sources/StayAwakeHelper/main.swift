@@ -20,18 +20,33 @@ private func isConnectionAuthorized(_ connection: NSXPCConnection) -> Bool {
     return SecCodeCheckValidity(code, [], requirement) == errSecSuccess
 }
 
+private func setPmsetDisableSleep(_ disabled: Bool) -> Bool {
+    let task = Process()
+    task.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
+    task.arguments = ["-a", "disablesleep", disabled ? "1" : "0"]
+    do {
+        try task.run()
+        task.waitUntilExit()
+        return task.terminationStatus == 0
+    } catch {
+        return false
+    }
+}
+
 final class HelperService: NSObject, StayAwakeHelperProtocol {
+    private var sleepDisabledByApp = false
+
     func setDisableSleep(_ disabled: Bool, reply: @escaping (Bool) -> Void) {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
-        task.arguments = ["-a", "disablesleep", disabled ? "1" : "0"]
-        do {
-            try task.run()
-            task.waitUntilExit()
-            reply(task.terminationStatus == 0)
-        } catch {
-            reply(false)
-        }
+        let ok = setPmsetDisableSleep(disabled)
+        if ok { sleepDisabledByApp = disabled }
+        reply(ok)
+    }
+
+    /// The app owns this system setting. If it quits, crashes or is killed while closed-lid mode is
+    /// on, give sleep back so a Mac in a bag can't stay awake until the battery dies.
+    func restoreSleepIfNeeded() {
+        guard sleepDisabledByApp else { return }
+        if setPmsetDisableSleep(false) { sleepDisabledByApp = false }
     }
 }
 
@@ -39,7 +54,10 @@ final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
         guard isConnectionAuthorized(connection) else { return false }
         connection.exportedInterface = NSXPCInterface(with: StayAwakeHelperProtocol.self)
-        connection.exportedObject = HelperService()
+        let service = HelperService()
+        connection.exportedObject = service
+        connection.invalidationHandler = { service.restoreSleepIfNeeded() }
+        connection.interruptionHandler = { service.restoreSleepIfNeeded() }
         connection.resume()
         return true
     }

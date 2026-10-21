@@ -141,6 +141,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let workstationCarrier = WorkstationCarrier()
     private let license = License.shared
     private var timer: Timer?
+    private var signalSources: [DispatchSourceSignal] = []
+    /// Plus-address on the project mailbox: lands in the same inbox, filterable by the +stayawake tag.
+    private let supportEmail = "pratiknayakprojects+stayawake@gmail.com"
     private var secondsRemaining: Int = 0
     private var selectedDuration: Duration = .untilOff
 
@@ -223,6 +226,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard resolveLaunchProblems() else { return }
         installEditMenu()
+        // `kill`/`pkill` (SIGTERM) would otherwise skip applicationWillTerminate and leave sleep blocked.
+        for sig in [SIGTERM, SIGINT, SIGHUP] {
+            signal(sig, SIG_IGN)
+            let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+            source.setEventHandler { NSApp.terminate(nil) }
+            source.resume()
+            signalSources.append(source)
+        }
         // A session started before the trial ended (e.g. "Until Off") must not outlive it.
         _ = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             guard let self, self.power.isAwake, self.license.state == .expired else { return }
@@ -315,6 +326,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(enter)
             menu.addItem(.separator())
         }
+        let support = NSMenuItem(title: "Contact Support…", action: #selector(contactSupport), keyEquivalent: "")
+        support.target = self
+        menu.addItem(support)
         let version = NSMenuItem(title: "Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")", action: nil, keyEquivalent: "")
         version.isEnabled = false
         menu.addItem(version)
@@ -475,6 +489,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func buyLicense() {
         guard License.isConfigured else { return showMessage("Purchasing isn't set up yet.") }
         NSWorkspace.shared.open(License.checkoutURL)
+    }
+
+    @objc private func contactSupport() {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        var mail = URLComponents()
+        mail.scheme = "mailto"
+        mail.path = supportEmail
+        mail.queryItems = [
+            URLQueryItem(name: "subject", value: "StayAwake \(version) support"),
+            URLQueryItem(name: "body", value: "What happened?\n\n\n--\nStayAwake \(version), \(ProcessInfo.processInfo.operatingSystemVersionString)"),
+        ]
+        if let url = mail.url { NSWorkspace.shared.open(url) }
     }
 
     @objc private func enterLicenseKey() {
