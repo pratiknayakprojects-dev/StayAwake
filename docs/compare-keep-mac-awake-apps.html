@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keep-awake apps for Mac compared: caffeinate, KeepingYouAwake, Amphetamine, StayAwake | StayAwake</title>
+<meta name="description" content="An honest comparison of the main ways to keep a Mac awake: caffeinate, KeepingYouAwake, Amphetamine and StayAwake, and which one fits closed-lid use.">
+<link rel="canonical" href="https://pratiknayakprojects-dev.github.io/StayAwake/compare-keep-mac-awake-apps.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Keep-awake apps for Mac compared: caffeinate, KeepingYouAwake, Amphetamine, StayAwake">
+<meta property="og:description" content="An honest comparison of the main ways to keep a Mac awake: caffeinate, KeepingYouAwake, Amphetamine and StayAwake, and which one fits closed-lid use.">
+<meta property="og:url" content="https://pratiknayakprojects-dev.github.io/StayAwake/compare-keep-mac-awake-apps.html">
+<meta property="og:image" content="https://pratiknayakprojects-dev.github.io/StayAwake/icon.png">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #FAF5EC;
+    --surface: #FFFDF8;
+    --ink: #2A2016;
+    --muted: #8A7862;
+    --accent: #96562A;
+    --accent-ink: #FFFDF8;
+    --border: #E7DCC7;
+    --shadow: rgba(42, 32, 22, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1C1611;
+      --surface: #241C15;
+      --ink: #F2E9DC;
+      --muted: #B3A28B;
+      --accent: #E0A65C;
+      --accent-ink: #2A2016;
+      --border: #3A2E20;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 56px 20px;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { border-radius: 8px; flex: none; }
+  .fine a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--border); }
+  .fine a:hover { border-color: var(--accent); }
+  .brand span { font-family: "Fraunces", Georgia, serif; font-size: 1.2rem; font-weight: 600; }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 5.5vw, 2.75rem);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+  }
+  .lede { font-size: 1.05rem; line-height: 1.6; color: var(--muted); margin: 0 0 28px; max-width: 46ch; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 15px 26px;
+    border-radius: 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px var(--shadow); }
+  .btn svg { width: 20px; height: 20px; }
+  .fine { margin: 14px 0 0; font-size: 0.85rem; color: var(--muted); }
+
+  .cases { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .case {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .case svg { width: 26px; height: 26px; color: var(--accent); margin-bottom: 14px; }
+  .case h2 { font-family: "Fraunces", Georgia, serif; font-size: 1.1rem; font-weight: 600; margin: 0 0 8px; }
+  .case p { margin: 0; font-size: 0.92rem; line-height: 1.55; color: var(--muted); }
+
+  .setup { margin: 0; font-size: 0.92rem; line-height: 1.6; color: var(--muted); }
+  .setup strong { color: var(--ink); font-weight: 600; }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  footer a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--border); }
+  footer a:hover { border-color: var(--accent); }
+
+  @media (max-width: 560px) {
+    .cases { grid-template-columns: 1fr; }
+  }
+
+  article { display:flex; flex-direction:column; gap:18px; }
+  article h2 { font-family:"Fraunces",Georgia,serif; font-weight:600; font-size:1.35rem; margin:18px 0 0; }
+  article p, article li { font-size:1rem; line-height:1.65; margin:0; }
+  article ul { margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:8px; }
+  article a { color:var(--accent); }
+  code, pre { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:0.88rem; }
+  pre { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; overflow-x:auto; margin:0; }
+  .brand a { display:flex; align-items:center; gap:12px; color:inherit; text-decoration:none; }
+  .note { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px; color:var(--muted); font-size:0.92rem; line-height:1.6; margin:0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand"><a href="./"><img src="icon.png" alt="" width="36" height="36"><span>StayAwake</span></a></div>
+
+  <article>
+    <h1>Keep-awake apps for Mac, compared</h1>
+    <p class="lede">Four common ways to stop a Mac sleeping, what each is good at, and the one limit that decides the choice: what happens when you close the lid.</p>
+    <p class="note">Disclosure: I'm Pratik, and I built StayAwake, one of the four. The others are free, good, and I say where they're the better pick. I describe them from their own documentation, so check each before relying on it.</p>
+
+    <h2>The short version</h2>
+    <ul>
+      <li><strong>Need to stop sleep while the lid is open?</strong> Use <code>caffeinate</code>, KeepingYouAwake or Amphetamine. They're free.</li>
+      <li><strong>Want lots of triggers and automation?</strong> Amphetamine.</li>
+      <li><strong>Need it to keep running with the lid closed and no external display?</strong> That is what StayAwake is for. It's paid.</li>
+    </ul>
+
+    <h2>caffeinate (built into macOS)</h2>
+    <p>Free and already on your Mac. Run it in Terminal. <code>-i</code> stops idle sleep, <code>-d</code> stops display sleep, <code>-s</code> stops system sleep on AC power, and <code>-t</code> sets a timeout. It has no menu and you manage it yourself. A lid close is a separate trigger, so it still sleeps the Mac. See <a href="keep-mac-awake-lid-closed.html">the lid-close guide</a>.</p>
+
+    <h2>KeepingYouAwake (free, open source)</h2>
+    <p>A menu bar app that wraps <code>caffeinate</code>, per its own README. It's the easiest free option for stopping sleep with the lid open. Because it uses the same mechanism, its README says it works with the lid open.</p>
+
+    <h2>Amphetamine (free, Mac App Store)</h2>
+    <p>A feature-rich menu bar app: timed sessions, triggers based on apps or Wi-Fi, and more. It has its own closed-display mode, and the requirements for that mode are in its documentation, so read them for your setup. If you want automation and no price tag, start here.</p>
+
+    <h2>StayAwake (paid, 7-day free trial, $4.99 once)</h2>
+    <p>A small menu bar app focused on one case: keep the Mac running with the lid closed, no external display. It runs <code>pmset disablesleep</code> through a helper you approve once. An auto-stop timer turns it off, and if the app quits, crashes or is force-quit, the helper restores normal sleep. Universal for Apple silicon and Intel, macOS 13 or later, signed and notarized. It does fewer things than Amphetamine. Source is MIT on GitHub.</p>
+    <p><a class="btn" href="https://github.com/pratiknayakprojects-dev/StayAwake/releases/latest/download/StayAwake.dmg">Try free for 7 days</a></p>
+
+    <h2>How to choose</h2>
+    <ul>
+      <li>Lid open, want it free: KeepingYouAwake or <code>caffeinate</code>.</li>
+      <li>Want triggers and sessions: Amphetamine.</li>
+      <li>Lid closed, on battery, no display: StayAwake, or <code>sudo pmset -a disablesleep 1</code> and remember to turn it off.</li>
+      <li>Lid closed with a display and power: clamshell mode is built in, so you may not need any app.</li>
+    </ul>
+    <p>Closed-lid use warms the Mac. Don't run it sealed in a bag; use a timer.</p>
+  </article>
+
+  <footer>
+    <span>Made by Pratik Nayak</span>
+    <span><a href="./">StayAwake</a> · <a href="keep-mac-awake-lid-closed.html">Lid-closed guide</a> · <a href="mailto:pratiknayakprojects+stayawake@gmail.com?subject=StayAwake%20support">Support</a> · <a href="https://github.com/pratiknayakprojects-dev/StayAwake">Source on GitHub</a></span>
+  </footer>
+
+</div>
+</body>
+</html>
