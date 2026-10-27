@@ -171,7 +171,7 @@ sudo pmset -a disablesleep 0   # back to normal</pre>
     <p>It generally works, though behaviour can vary by Mac and macOS version, and it needs root. The risks are practical: if you forget to switch it back, the Mac stays awake whenever you close it, including in a bag, where it can get hot and drain the battery. If you go this route, set a reminder, or run something that reverts it for you.</p>
 
     <h2>Where StayAwake fits</h2>
-    <p>StayAwake is a menu bar app that does the above for you. "Keep Awake" uses a normal power assertion. "Keep Awake When Lid Closed" runs <code>pmset disablesleep</code> through a small helper you approve once. The part I care about is the cleanup: a timer (10 minutes to 3 hours) switches it off for you, and if the app quits, crashes or is force-killed, the helper restores normal sleep. I tested a force-kill, a normal quit and a real lid close before release.</p>
+    <p>StayAwake is a menu bar app that does the above for you. "Keep Awake" uses a normal power assertion. "Keep Awake When Lid Closed" runs <code>pmset disablesleep</code> through a small helper you approve once. The part I care about is the cleanup: a timer (10 minutes to 3 hours) switches it off for you, and if the app quits, crashes or is force-killed, the helper restores normal sleep. Closed-lid mode also stops itself if macOS reports serious heat or the battery falls below a level you choose (10% by default), and sends a notification saying why. I tested a force-kill, a normal quit and a real lid close before release.</p>
     <p>It is a universal app for Apple silicon and Intel on macOS 13 or later, signed and notarized by Apple. There is a 7-day free trial, then it is $4.99 once, no subscription. The source is on GitHub under the MIT license.</p>
     <p><a class="btn" href="https://github.com/pratiknayakprojects-dev/StayAwake/releases/latest/download/StayAwake.dmg">Try free for 7 days</a></p>
     <p class="fine">Buy a license any time: <a href="https://pratikprojects.gumroad.com/l/efsecq">Gumroad</a>. Or use the free methods above; they are real options.</p>
@@ -179,7 +179,7 @@ sudo pmset -a disablesleep 0   # back to normal</pre>
     <h2>Quick tips for closed-lid use</h2>
     <ul>
       <li>Plug in if you can. A closed, working Mac on battery drains faster than you'd expect.</li>
-      <li>Don't leave it running in a sealed bag. Give it airflow, and use a timer.</li>
+      <li>Don't leave it running in a sealed bag. Give it airflow, and use a timer. StayAwake's heat and battery cutoffs are a backstop, not a reason to skip this.</li>
       <li>Check that your task survives a network change if you're moving around. Closed-lid mode keeps the Mac running; it can't keep a Wi-Fi connection that goes out of range.</li>
     </ul>
   </article>

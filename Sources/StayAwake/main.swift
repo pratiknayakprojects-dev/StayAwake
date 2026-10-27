@@ -1,5 +1,7 @@
 import Cocoa
 import IOKit.pwr_mgt
+import IOKit.ps
+import UserNotifications
 import ServiceManagement
 import StayAwakeShared
 
@@ -147,6 +149,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let supportEmail = "pratiknayakprojects+stayawake@gmail.com"
     private var secondsRemaining: Int = 0
     private var selectedDuration: Duration = .untilOff
+    /// Why the last session ended on its own (hot Mac, low battery); shown in the menu until the next start.
+    private var lastStopReason: String?
+    private let defaults = UserDefaults.standard
+    private var thermalCutoffOn: Bool { defaults.bool(forKey: "thermalCutoff") }
+    /// Battery percent below which closed-lid mode stops; 0 = off.
+    private var batteryCutoff: Int { defaults.integer(forKey: "batteryCutoff") }
 
     /// Draws a coffee cup whose fill level reflects time remaining.
     /// fraction 0 = empty outline, 1 = full cup. Template image so it
@@ -241,6 +249,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.stop()
             _ = self.ensureAllowed()
         }
+        defaults.register(defaults: ["thermalCutoff": true, "batteryCutoff": 10])
+        NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.checkSafety()
+        }
+        _ = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in self?.checkSafety() }
         power.syncFromSystem()
         _ = license.state // first launch starts the trial clock
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -257,7 +270,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func buildMenu() {
         let menu = NSMenu()
 
-        let statusText = power.isAwake ? statusLine() : "Not keeping your Mac awake"
+        let statusText = power.isAwake ? statusLine() : (lastStopReason ?? "Not keeping your Mac awake")
         let statusEntry = NSMenuItem(title: statusText, action: nil, keyEquivalent: "")
         statusEntry.isEnabled = false
         menu.addItem(statusEntry)
@@ -311,6 +324,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         autoStop.submenu = autoStopMenu
         menu.addItem(autoStop)
+
+        let safety = NSMenuItem(title: "Lid-Closed Safety", action: nil, keyEquivalent: "")
+        let safetyMenu = NSMenu()
+        let hot = NSMenuItem(title: "Stop if Mac Gets Hot", action: #selector(toggleThermalCutoff), keyEquivalent: "")
+        hot.target = self
+        hot.state = thermalCutoffOn ? .on : .off
+        safetyMenu.addItem(hot)
+        safetyMenu.addItem(.separator())
+        let header = NSMenuItem(title: "Stop When Battery Falls Below", action: nil, keyEquivalent: "")
+        header.isEnabled = false
+        safetyMenu.addItem(header)
+        for pct in [0, 10, 20, 30] {
+            let item = NSMenuItem(title: pct == 0 ? "Never" : "\(pct)%", action: #selector(pickBatteryCutoff(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = pct
+            item.state = (pct == batteryCutoff) ? .on : .off
+            safetyMenu.addItem(item)
+        }
+        safety.submenu = safetyMenu
+        menu.addItem(safety)
 
         menu.addItem(.separator())
         let loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLoginItem), keyEquivalent: "")
@@ -380,10 +413,58 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         stop()
     }
 
+    @objc private func toggleThermalCutoff() {
+        defaults.set(!thermalCutoffOn, forKey: "thermalCutoff")
+        buildMenu()
+    }
+
+    @objc private func pickBatteryCutoff(_ sender: NSMenuItem) {
+        defaults.set(sender.tag, forKey: "batteryCutoff")
+        buildMenu()
+    }
+
+    /// Battery percent, or nil when on AC power or there is no battery (a desktop Mac never trips this).
+    private func batteryPercentOnBattery() -> Int? {
+        let info = IOPSCopyPowerSourcesInfo().takeRetainedValue()
+        for source in IOPSCopyPowerSourcesList(info).takeRetainedValue() as Array {
+            guard let d = IOPSGetPowerSourceDescription(info, source)?.takeUnretainedValue() as? [String: Any],
+                  d[kIOPSPowerSourceStateKey] as? String == kIOPSBatteryPowerValue,
+                  let cur = d[kIOPSCurrentCapacityKey] as? Int, let max = d[kIOPSMaxCapacityKey] as? Int, max > 0 else { continue }
+            return cur * 100 / max
+        }
+        return nil
+    }
+
+    /// A Mac with the lid shut in a bag can't cool or be noticed, so closed-lid mode gives sleep back
+    /// when it runs hot or the battery is low. Plain Keep Awake (lid open) is left alone.
+    private func checkSafety() {
+        guard power.isAwake, power.lidClosedAllowed else { return }
+        var reason: String?
+        if thermalCutoffOn, ProcessInfo.processInfo.thermalState.rawValue >= ProcessInfo.ThermalState.serious.rawValue {
+            reason = "Stopped: your Mac was getting hot"
+        } else if batteryCutoff > 0, let pct = batteryPercentOnBattery(), pct < batteryCutoff {
+            reason = "Stopped: battery fell below \(batteryCutoff)%"
+        }
+        guard let reason else { return }
+        stop()
+        lastStopReason = reason
+        buildMenu()
+        notify(reason)
+    }
+
+    private func notify(_ text: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "StayAwake"
+        content.body = text + ". Your Mac can sleep normally again."
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+
     /// Preset: lid-closed protection for exactly one hour, plus an attempt to
     /// rejoin the iPhone's hotspot so the Mac stays networked in a bag too.
     @objc private func carryMyWorkstation() {
         guard ensureAllowed() else { return }
+        lastStopReason = nil
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert]) { _, _ in }
         power.startAwake(lidClosed: true)
         selectedDuration = .oneHour
         startCountdownIfNeeded(reset: true)
@@ -394,6 +475,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func chooseAwake() {
         guard ensureAllowed() else { return }
+        lastStopReason = nil
         power.startAwake(lidClosed: false)
         startCountdownIfNeeded(reset: true)
         updateButton()
@@ -402,6 +484,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func chooseAwakeLidClosed() {
         guard ensureAllowed() else { return }
+        lastStopReason = nil
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert]) { _, _ in }
         power.startAwake(lidClosed: true)
         startCountdownIfNeeded(reset: true)
         updateButton()
