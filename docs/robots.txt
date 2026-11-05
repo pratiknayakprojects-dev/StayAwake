@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pratiknayakprojects-dev.github.io/StayAwake/sitemap.xml
+Sitemap: https://slogoi.com/sitemap.xml
